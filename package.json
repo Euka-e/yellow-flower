@@ -1,0 +1,20 @@
+{
+  "name": "yellow-flower",
+  "version": "1.0.0",
+  "description": "Interactive yellow flower that grows when clicking. Built with Vue and Three.js",
+  "main": "index.html",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "vue": "^3.3.0",
+    "three": "^0.156.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^4.4.0",
+    "vite": "^4.4.0"
+  },
+  "type": "module"
+}
