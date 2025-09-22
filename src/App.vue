@@ -94,19 +94,18 @@ export default {
         
         // Crear la cámara (nuestro "ojo" para ver la escena)
         // PerspectiveCamera simula como vemos las cosas en la vida real
-        this.camera = new THREE.PerspectiveCamera(75, width / height, 0.1, 1000)
-        this.camera.position.set(0, 1, 4) // Posicionar la cámara para ver mejor el montículo
-        this.camera.lookAt(0, -1, 0) // Mirar hacia el montículo
+        this.camera = new THREE.PerspectiveCamera(60, width / height, 0.1, 1000)
+        this.camera.position.set(0, 3, 8) // Posicionar la cámara para una vista clara
+        this.camera.lookAt(0, 0, 0) // Mirar hacia el centro de la escena
         
-        // Crear el renderizador (lo que dibuja la escena en pantalla)
+        // Crear el renderizador WebGL con configuración básica
         this.renderer = new THREE.WebGLRenderer({ 
-          antialias: true, 
-          alpha: true,
-          powerPreference: "high-performance"
+          antialias: true,
+          alpha: true
         })
         this.renderer.setSize(width, height)
         this.renderer.setClearColor(0x000000, 0) // Fondo transparente
-        this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+        this.renderer.shadowMap.enabled = false // Desactivar sombras para mejor rendimiento
         
         // Añadir el canvas del renderizador al DOM
         container.appendChild(this.renderer.domElement)
@@ -126,20 +125,16 @@ export default {
       try {
         console.log('Creating scene elements...')
         
-        // Crear iluminación para que podamos ver los objetos
-        // AmbientLight ilumina todo de manera uniforme
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6)
+        // Para materiales básicos no necesitamos iluminación
+        // Pero añadimos una luz ambiental por si usamos materiales Lambert después
+        const ambientLight = new THREE.AmbientLight(0xffffff, 1.0)
         this.scene.add(ambientLight)
-        
-        // DirectionalLight simula la luz del sol
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8)
-        directionalLight.position.set(10, 10, 5)
-        this.scene.add(directionalLight)
         
         // Crear el montículo de tierra
         this.createDirtMound()
         
         console.log('Scene created successfully')
+        console.log('Scene children count:', this.scene.children.length)
       } catch (error) {
         console.error('Error creating scene:', error)
       }
@@ -147,59 +142,72 @@ export default {
     
     // Crear el montículo de tierra
     createDirtMound() {
-      // SphereGeometry crea una esfera, la cortamos por la mitad para hacer un montículo
-      // Hacemos el montículo más grande y lo posicionamos en la parte inferior
-      const geometry = new THREE.SphereGeometry(2.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2)
-      
-      // Material marrón para simular tierra
-      const material = new THREE.MeshLambertMaterial({ 
-        color: 0x8B4513  // Color marrón
-      })
-      
-      this.dirtMound = new THREE.Mesh(geometry, material)
-      this.dirtMound.position.set(0, -1.5, 0) // Posicionar para que ocupe el cuarto inferior
-      this.scene.add(this.dirtMound)
+      try {
+        // Crear el montículo usando SphereGeometry como originalmente planeado
+        const geometry = new THREE.SphereGeometry(3.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2)
+        
+        // Material marrón para simular tierra usando MeshBasicMaterial para compatibilidad
+        const material = new THREE.MeshBasicMaterial({ 
+          color: 0x8B4513,  // Color marrón
+          side: THREE.FrontSide
+        })
+        
+        this.dirtMound = new THREE.Mesh(geometry, material)
+        this.dirtMound.position.set(0, -2.5, 0) // Posicionar en la parte inferior
+        this.scene.add(this.dirtMound)
+        
+        console.log('3D dirt mound created successfully')
+        
+      } catch (error) {
+        console.error('Error creating 3D dirt mound:', error)
+      }
     },
     
     // Crear la flor amarilla
     createFlower() {
-      // Group agrupa varios objetos para manipularlos juntos
-      this.flowerGroup = new THREE.Group()
-      
-      // Crear el tallo (un cilindro verde)
-      const stemGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8)
-      const stemMaterial = new THREE.MeshLambertMaterial({ color: 0x228B22 }) // Verde
-      const stem = new THREE.Mesh(stemGeometry, stemMaterial)
-      stem.position.y = 0.75 // Centrar el tallo
-      this.flowerGroup.add(stem)
-      
-      // Crear los pétalos de la flor
-      const petalGeometry = new THREE.SphereGeometry(0.3, 16, 8)
-      const petalMaterial = new THREE.MeshLambertMaterial({ color: 0xFFD700 }) // Amarillo dorado
-      
-      // Crear varios pétalos alrededor del centro
-      for (let i = 0; i < 8; i++) {
-        const petal = new THREE.Mesh(petalGeometry, petalMaterial)
-        const angle = (i / 8) * Math.PI * 2
-        petal.position.x = Math.cos(angle) * 0.4
-        petal.position.z = Math.sin(angle) * 0.4
-        petal.position.y = 1.5
-        petal.scale.set(0.8, 0.3, 0.8) // Aplanar los pétalos
-        this.flowerGroup.add(petal)
+      try {
+        // Group agrupa varios objetos para manipularlos juntos
+        this.flowerGroup = new THREE.Group()
+        
+        // Crear el tallo (un cilindro verde) con MeshBasicMaterial
+        const stemGeometry = new THREE.CylinderGeometry(0.05, 0.05, 1.5, 8)
+        const stemMaterial = new THREE.MeshBasicMaterial({ color: 0x228B22 }) // Verde
+        const stem = new THREE.Mesh(stemGeometry, stemMaterial)
+        stem.position.y = 0.75 // Centrar el tallo
+        this.flowerGroup.add(stem)
+        
+        // Crear los pétalos de la flor con MeshBasicMaterial
+        const petalGeometry = new THREE.SphereGeometry(0.3, 16, 8)
+        const petalMaterial = new THREE.MeshBasicMaterial({ color: 0xFFD700 }) // Amarillo dorado
+        
+        // Crear varios pétalos alrededor del centro
+        for (let i = 0; i < 8; i++) {
+          const petal = new THREE.Mesh(petalGeometry, petalMaterial)
+          const angle = (i / 8) * Math.PI * 2
+          petal.position.x = Math.cos(angle) * 0.4
+          petal.position.z = Math.sin(angle) * 0.4
+          petal.position.y = 1.5
+          petal.scale.set(0.8, 0.3, 0.8) // Aplanar los pétalos
+          this.flowerGroup.add(petal)
+        }
+        
+        // Crear el centro de la flor con MeshBasicMaterial
+        const centerGeometry = new THREE.SphereGeometry(0.2, 16, 8)
+        const centerMaterial = new THREE.MeshBasicMaterial({ color: 0xFF8C00 }) // Naranja
+        const center = new THREE.Mesh(centerGeometry, centerMaterial)
+        center.position.y = 1.5
+        this.flowerGroup.add(center)
+        
+        // Inicializar la flor muy pequeña (escala 0)
+        this.flowerGroup.scale.set(0, 0, 0)
+        this.flowerGroup.position.set(0, -2.5, 0) // Posición en el montículo
+        
+        this.scene.add(this.flowerGroup)
+        
+        console.log('3D flower created successfully')
+      } catch (error) {
+        console.error('Error creating 3D flower:', error)
       }
-      
-      // Crear el centro de la flor
-      const centerGeometry = new THREE.SphereGeometry(0.2, 16, 8)
-      const centerMaterial = new THREE.MeshLambertMaterial({ color: 0xFF8C00 }) // Naranja
-      const center = new THREE.Mesh(centerGeometry, centerMaterial)
-      center.position.y = 1.5
-      this.flowerGroup.add(center)
-      
-      // Inicializar la flor muy pequeña (escala 0)
-      this.flowerGroup.scale.set(0, 0, 0)
-      this.flowerGroup.position.set(0, -1.5, 0) // Posición en el montículo
-      
-      this.scene.add(this.flowerGroup)
     },
     
     // Función que se ejecuta cuando se hace clic en "Regar"
@@ -276,12 +284,30 @@ export default {
     animate() {
       requestAnimationFrame(this.animate)
       
+      // Debug: log once every 120 frames (about 2 seconds at 60fps)
+      if (!this.frameCount) this.frameCount = 0
+      this.frameCount++
+      
+      if (this.frameCount === 1) {
+        console.log('First render frame')
+        console.log('Scene children:', this.scene.children.length)
+        console.log('Camera position:', this.camera.position)
+        console.log('Renderer info:', this.renderer.info)
+      }
+      
       // Opcional: añadir rotación suave a la flor
       if (this.flowerGroup && this.flowerGroup.scale.x > 0) {
         this.flowerGroup.rotation.y += 0.005
       }
       
-      this.renderer.render(this.scene, this.camera)
+      // Intentar renderizar la escena
+      try {
+        this.renderer.render(this.scene, this.camera)
+      } catch (renderError) {
+        if (this.frameCount < 10) {
+          console.error('Render error:', renderError)
+        }
+      }
     }
   }
 }
